@@ -47,7 +47,7 @@ https://github.com/Jenth1234/test-vercel-supabase
 | `npm run dev`     | Start Next.js in development mode |
 | `npm run build`   | Production build (requires env vars set) |
 | `npm run start`   | Serve the production build |
-| `npm run lint`    | ESLint using Next.js config |
+| `npm run lint`    | Run ESLint in legacy `.eslintrc` mode |
 | `npm run migrate` | Apply pending Mikro-ORM migrations |
 | `npm run mikro-orm <cmd>` | Run arbitrary Mikro-ORM CLI command |
 
@@ -77,7 +77,14 @@ https://github.com/Jenth1234/test-vercel-supabase
    - `DATABASE_URL`
    - `SHADOW_DATABASE_URL` (optional, recommended for safe migrations)
 3. Add a [Vercel Postgres integration](https://vercel.com/integrations/supabase) or keep using Supabase pooling (port `6543`).
-4. Run migrations as part of deployment by adding a post-deployment hook or enabling [Vercel Job Migrations](https://vercel.com/docs/workflows/scheduled-jobs) that calls `npm run migrate`.
+4. Leave the **Output Directory** field empty (or `.next`) so Vercel picks the default Next.js build folder.
+5. Run migrations as part of deployment by adding a post-deployment hook or enabling [Vercel Job Migrations](https://vercel.com/docs/workflows/scheduled-jobs) that calls `npm run migrate`.
+
+## Linting
+
+- The project keeps a traditional `.eslintrc.json` for compatibility with existing tooling.
+- Use `npm run lint` to lint the entire codebase. The script sets `ESLINT_USE_FLAT_CONFIG=false` via `cross-env` so the legacy configuration continues to work on any platform.
+- When ready to adopt the new ESLint flat config, remove the environment variable and migrate the rules into `eslint.config.js`.
 
 ## Folder structure overview
 
