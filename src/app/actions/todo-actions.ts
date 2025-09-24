@@ -95,3 +95,24 @@ export async function clearCompletedTodosAction() {
     return { ok: false, error: message } as ActionState;
   }
 }
+
+export async function markAllTodosCompletedAction() {
+  try {
+    const em = await getEntityManager();
+    const updatedCount = await em.nativeUpdate(Todo, { completed: false }, { completed: true });
+
+    if (updatedCount === 0) {
+      return { ok: false, error: 'No active tasks to mark complete' } as ActionState;
+    }
+
+    revalidatePath('/');
+    return { ok: true } as ActionState;
+  } catch (error) {
+    console.error('Failed to mark all todos completed', error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Something went wrong. Please try again later.';
+    return { ok: false, error: message } as ActionState;
+  }
+}

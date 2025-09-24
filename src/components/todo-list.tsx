@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import {
   clearCompletedTodosAction,
   deleteTodoAction,
+  markAllTodosCompletedAction,
   toggleTodoAction
 } from '@/app/actions/todo-actions';
 
@@ -21,14 +22,23 @@ type Props = {
 
 export function TodoList({ todos }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [clearError, setClearError] = useState<string | null>(null);
+  const [bulkError, setBulkError] = useState<{ source: 'clear' | 'complete'; message: string } | null>(
+    null
+  );
   const hasCompletedTodos = todos.some((todo) => todo.completed);
+  const hasActiveTodos = todos.some((todo) => !todo.completed);
 
   useEffect(() => {
-    if (hasCompletedTodos) {
-      setClearError(null);
+    if (bulkError?.source === 'clear' && hasCompletedTodos) {
+      setBulkError(null);
     }
-  }, [hasCompletedTodos]);
+  }, [bulkError, hasCompletedTodos]);
+
+  useEffect(() => {
+    if (bulkError?.source === 'complete' && hasActiveTodos) {
+      setBulkError(null);
+    }
+  }, [bulkError, hasActiveTodos]);
 
   if (todos.length === 0) {
     return <p className="empty-state">Create your first task to see it here.</p>;
@@ -36,15 +46,40 @@ export function TodoList({ todos }: Props) {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.75rem',
+          flexWrap: 'wrap',
+          marginBottom: '0.5rem'
+        }}
+      >
         <button
           type="button"
           onClick={() => {
-            setClearError(null);
+            setBulkError(null);
+            startTransition(async () => {
+              const result = await markAllTodosCompletedAction();
+              if (!result.ok && result.error) {
+                setBulkError({ source: 'complete', message: result.error });
+              }
+            });
+          }}
+          className="primary-button"
+          disabled={isPending || !hasActiveTodos}
+        >
+          Mark all as completed
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setBulkError(null);
             startTransition(async () => {
               const result = await clearCompletedTodosAction();
               if (!result.ok && result.error) {
-                setClearError(result.error);
+                setBulkError({ source: 'clear', message: result.error });
               }
             });
           }}
@@ -54,8 +89,10 @@ export function TodoList({ todos }: Props) {
           Clear completed tasks
         </button>
       </div>
-      {clearError ? (
-        <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: '0.75rem' }}>{clearError}</p>
+      {bulkError ? (
+        <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+          {bulkError.message}
+        </p>
       ) : null}
       <ul className="todo-list">
         {todos.map((todo) => {
