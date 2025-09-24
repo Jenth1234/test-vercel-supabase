@@ -74,3 +74,24 @@ export async function deleteTodoAction(id: string) {
 
   return { ok: true } as ActionState;
 }
+
+export async function clearCompletedTodosAction() {
+  try {
+    const em = await getEntityManager();
+    const deletedCount = await em.nativeDelete(Todo, { completed: true });
+
+    if (deletedCount === 0) {
+      return { ok: false, error: 'No completed tasks to clear' } as ActionState;
+    }
+
+    revalidatePath('/');
+    return { ok: true } as ActionState;
+  } catch (error) {
+    console.error('Failed to clear completed todos', error);
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Something went wrong. Please try again later.';
+    return { ok: false, error: message } as ActionState;
+  }
+}
