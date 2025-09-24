@@ -39,6 +39,15 @@ export default async function HomePage() {
           >
             Mikro-ORM docs
           </Link>
+          <Link
+            href="https://nextjs.org/docs"
+            target="_blank"
+            rel="noreferrer"
+            className="primary-button"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            Next.js docs
+          </Link>
         </nav>
       </header>
       <TodoForm />
